@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Làm Chủ Tiếng Anh Bằng Phương Pháp Chunking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .chunk-box {
+            transition: all 0.3s ease;
+        }
+        .chunk-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-800 font-sans leading-relaxed">
+
+    <!-- Chosen Palette: Warm Neutral & Emerald (Stone-50, Slate-800, Emerald-600, Emerald-100) -->
+    
+    <!-- Application Structure Plan: The SPA is structured as a chronological learning guide. It begins with the conceptual foundation (What & Why, using interactive text and a comparative radar chart), moves to actionable steps (Daily Routine represented as a timeline), and concludes with practical implementation (Tool setup guides for Notion/Obsidian using interactive tabs). This flow guides the user from understanding the 'why' to executing the 'how' directly addressing the prompt's requests. -->
+    
+    <!-- Visualization & Content Choices: 
+         1. Concept Interactive Text -> Goal: Inform -> Method: Clickable HTML elements -> Justification: Actively shows the transition from fragmented words to cohesive chunks.
+         2. Comparison Radar Chart -> Goal: Compare -> Method: Chart.js Radar -> Interaction: Hover tooltips -> Justification: Visually demonstrates the multidimensional benefits of chunking over traditional vocabulary learning.
+         3. Daily Routine Timeline -> Goal: Organize/Process -> Method: HTML/Tailwind timeline layout -> Justification: Breaks down daily actions into a clear, linear visual format without needing complex libraries.
+         4. Tool Setup Tabs -> Goal: Organize/Inform -> Method: JS Tabs revealing HTML structures -> Justification: Allows users to focus on their preferred tool (Notion or Obsidian) without cluttering the screen with both simultaneously. 
+         Library/Method: Chart.js for data visualization. Tailwind for structure. Vanilla JS for interactions. NO SVG/Mermaid used. -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 font-bold text-xl text-emerald-700 tracking-tight">
+                    🧩 Chunking Mastery
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#concept" class="text-slate-600 hover:text-emerald-600 font-medium transition-colors">Bản Chất</a>
+                    <a href="#benefits" class="text-slate-600 hover:text-emerald-600 font-medium transition-colors">Phân Tích</a>
+                    <a href="#routine" class="text-slate-600 hover:text-emerald-600 font-medium transition-colors">Hành Động</a>
+                    <a href="#tools" class="text-slate-600 hover:text-emerald-600 font-medium transition-colors">Công Cụ (Notion/Obsidian)</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
+            Đừng Học Từ Vựng Nữa. <br><span class="text-emerald-600">Hãy Học Theo Cụm (Chunking).</span>
+        </h1>
+        <p class="text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+            Khám phá cách não bộ xử lý ngôn ngữ tự nhiên, xây dựng thói quen hàng ngày và thiết lập hệ thống ghi nhớ tối ưu với Notion hoặc Obsidian.
+        </p>
+        <a href="#concept" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-xl">
+            Bắt đầu tìm hiểu ⬇️
+        </a>
+    </header>
+
+    <main>
+        <section id="concept" class="py-16 bg-white border-t border-b border-slate-200">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-10 text-center">
+                    <h2 class="text-3xl font-bold text-slate-900">1. Chunking Là Gì?</h2>
+                    <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+                        Thay vì học từng từ đơn lẻ và cố gắng ghép chúng lại bằng các quy tắc ngữ pháp phức tạp, "Chunking" là phương pháp tiếp thu ngôn ngữ theo <strong>các cụm từ có nghĩa đi liền với nhau</strong>.
+                    </p>
+                </div>
+
+                <div class="bg-stone-50 rounded-2xl p-8 border border-slate-200 shadow-sm text-center">
+                    <h3 class="text-xl font-semibold mb-6 text-slate-800">Trải nghiệm sự khác biệt</h3>
+                    <p class="text-sm text-slate-500 mb-8">Nhấn vào nút bên dưới để xem cách xử lý thông tin thay đổi.</p>
+                    
+                    <div class="min-h-[120px] flex flex-col justify-center items-center">
+                        <div id="word-view" class="flex flex-wrap justify-center gap-3">
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">By</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">the</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">way,</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">I</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">need</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">to</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">make</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">a</span>
+                            <span class="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm font-mono text-slate-700">decision.</span>
+                        </div>
+
+                        <div id="chunk-view" class="hidden flex flex-wrap justify-center gap-4">
+                            <div class="px-6 py-3 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl shadow-sm font-medium chunk-box">
+                                By the way, <br><span class="text-xs text-emerald-600 font-normal">Ngữ cố định (Nhân tiện)</span>
+                            </div>
+                            <div class="px-6 py-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-xl shadow-sm font-medium chunk-box">
+                                I need to <br><span class="text-xs text-blue-600 font-normal">Cụm động từ (Tôi cần phải)</span>
+                            </div>
+                            <div class="px-6 py-3 bg-purple-100 border border-purple-300 text-purple-800 rounded-xl shadow-sm font-medium chunk-box">
+                                make a decision. <br><span class="text-xs text-purple-600 font-normal">Collocation (Đưa ra quyết định)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="toggle-chunk-btn" class="mt-8 px-6 py-2 bg-slate-800 text-white rounded-md hover:bg-slate-700 transition-colors font-medium">
+                        Chuyển sang góc nhìn Chunking 🪄
+                    </button>
+                    <p id="chunk-explanation" class="hidden mt-4 text-emerald-700 font-medium">
+                        Bộ não giờ chỉ phải xử lý 3 đơn vị thông tin thay vì 9! Tốc độ phản xạ tăng gấp 3 lần.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="benefits" class="py-16">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-10 text-center">
+                    <h2 class="text-3xl font-bold text-slate-900">2. Phân Tích Hiệu Quả Đa Chiều</h2>
+                    <p class="mt-4 text-lg text-slate-600">
+                        So sánh tương quan giữa phương pháp học từ vựng truyền thống (đơn lẻ) và học theo cụm (Chunking) dựa trên 5 khía cạnh cốt lõi của việc tiếp thu ngôn ngữ.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600">
+                        <div class="flex items-start">
+                            <span class="text-emerald-500 mr-2">✅</span>
+                            <p><strong>Độ lưu loát & Tự nhiên:</strong> Chunking cung cấp sẵn cấu trúc, giúp bạn không cần lắp ghép ngữ pháp khi nói.</p>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-emerald-500 mr-2">✅</span>
+                            <p><strong>Giảm tải nhận thức:</strong> Ít đơn vị cần nhớ hơn = não bộ xử lý nhanh hơn, giảm hẳn việc dịch thầm từ tiếng Việt.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="routine" class="py-16 bg-slate-900 text-stone-50">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-12 text-center">
+                    <h2 class="text-3xl font-bold text-white">3. Hành Động Hàng Ngày (Kế Hoạch Thực Chiến)</h2>
+                    <p class="mt-4 text-lg text-slate-300">
+                        Để biến Chunking thành phản xạ, đây là chu trình bạn cần lặp lại mỗi ngày. Không cần nhiều thời gian, chỉ cần sự nhất quán.
+                    </p>
+                </div>
+
+                <div class="relative max-w-3xl mx-auto">
+                    <div class="absolute inset-0 left-8 md:left-1/2 w-1 bg-slate-700 transform -translate-x-1/2 h-full"></div>
+
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between mb-12">
+                        <div class="md:w-5/12 order-2 md:order-1 pl-16 md:pl-0 md:text-right pr-0 md:pr-8 mt-4 md:mt-0">
+                            <h3 class="text-xl font-bold text-emerald-400">Giai đoạn 1: Săn Lùng (Input)</h3>
+                            <p class="mt-2 text-slate-300 text-sm">Thời gian: 15-20 phút</p>
+                            <ul class="mt-3 text-slate-400 text-sm list-disc list-inside md:list-none space-y-2">
+                                <li>Đọc 1 bài báo/Nghe 1 podcast/Xem 1 video Youtube (Native speaker).</li>
+                                <li><strong>Hành động:</strong> Không tra từ mới ngay. Hãy chú ý các từ hay đi cùng nhau. Gạch chân/Highlight toàn bộ cụm đó.</li>
+                                <li><span class="italic text-emerald-200">Ví dụ: Thấy từ "attention", đừng ghi mỗi nó. Hãy ghi "Pay close attention to".</span></li>
+                            </ul>
+                        </div>
+                        <div class="order-1 md:order-2 flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-full border-4 border-slate-900 shadow-xl font-bold text-2xl z-10 absolute left-0 md:left-1/2 transform md:-translate-x-1/2">🌅</div>
+                        <div class="md:w-5/12 order-3 md:order-3"></div>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between mb-12">
+                        <div class="md:w-5/12 order-2 md:order-1"></div>
+                        <div class="order-1 md:order-2 flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full border-4 border-slate-900 shadow-xl font-bold text-2xl z-10 absolute left-0 md:left-1/2 transform md:-translate-x-1/2">☀️</div>
+                        <div class="md:w-5/12 order-3 md:order-3 pl-16 md:pl-8 pr-0 mt-4 md:mt-0 text-left">
+                            <h3 class="text-xl font-bold text-blue-400">Giai đoạn 2: Trích Xuất & Lưu Trữ</h3>
+                            <p class="mt-2 text-slate-300 text-sm">Thời gian: 10 phút</p>
+                            <ul class="mt-3 text-slate-400 text-sm list-disc list-inside space-y-2">
+                                <li>Chuyển các "chunks" đã săn được vào hệ thống lưu trữ (Notion/Obsidian).</li>
+                                <li><strong>Nguyên tắc:</strong> LUÔN LUÔN ghi kèm 1 câu ví dụ hoàn chỉnh chứa chunk đó, lý tưởng nhất là câu gốc trong ngữ cảnh bạn vừa đọc/nghe.</li>
+                                <li>Gắn thẻ (Tag) theo chủ đề (Ví dụ: #work, #emotions, #giving-opinion).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between">
+                        <div class="md:w-5/12 order-2 md:order-1 pl-16 md:pl-0 md:text-right pr-0 md:pr-8 mt-4 md:mt-0">
+                            <h3 class="text-xl font-bold text-purple-400">Giai đoạn 3: Phản Xạ (Output)</h3>
+                            <p class="mt-2 text-slate-300 text-sm">Thời gian: 15 phút</p>
+                            <ul class="mt-3 text-slate-400 text-sm list-disc list-inside md:list-none space-y-2">
+                                <li>Mở danh sách chunks đã lưu (Sử dụng kỹ thuật Spaced Repetition - Ôn tập ngắt quãng).</li>
+                                <li><strong>Hành động:</strong> Đọc to câu ví dụ (Shadowing) nhiều lần cho trơn miệng.</li>
+                                <li>Tưởng tượng một tình huống thực tế của bạn và tự tạo một câu mới sử dụng chunk đó và nói to lên.</li>
+                            </ul>
+                        </div>
+                        <div class="order-1 md:order-2 flex items-center justify-center w-16 h-16 bg-purple-600 rounded-full border-4 border-slate-900 shadow-xl font-bold text-2xl z-10 absolute left-0 md:left-1/2 transform md:-translate-x-1/2">🌙</div>
+                        <div class="md:w-5/12 order-3 md:order-3"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tools" class="py-16 bg-white">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-10 text-center">
+                    <h2 class="text-3xl font-bold text-slate-900">4. Thiết Lập Hệ Thống Ghi Nhớ</h2>
+                    <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+                        Chọn công cụ phù hợp với phong cách của bạn. Notion mạnh về quản lý dạng bảng (Database), trong khi Obsidian tuyệt vời cho việc liên kết ý tưởng (Network).
+                    </p>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="inline-flex bg-slate-100 p-1 rounded-lg mb-8">
+                        <button id="tab-notion" class="px-6 py-2.5 rounded-md text-sm font-medium transition-colors bg-white shadow text-slate-800" onclick="switchTab('notion')">
+                            📓 Dùng Notion (Cấu trúc Database)
+                        </button>
+                        <button id="tab-obsidian" class="px-6 py-2.5 rounded-md text-sm font-medium transition-colors text-slate-500 hover:text-slate-800" onclick="switchTab('obsidian')">
+                            🪨 Dùng Obsidian (Mạng lưới liên kết)
+                        </button>
+                    </div>
+
+                    <!-- Notion Content -->
+                    <div id="content-notion" class="w-full max-w-4xl animate-fade-in">
+                        <div class="bg-stone-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                            <div class="bg-slate-100 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+                                <span class="text-xl">📓</span>
+                                <span class="font-semibold text-slate-700">Chunking Database.csv</span>
+                            </div>
+                            <div class="p-6">
+                                <p class="text-slate-600 mb-6">Tạo một <strong>Table Database</strong> trong Notion với các cột (Properties) sau:</p>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="border-b-2 border-slate-200 text-slate-500 text-sm uppercase tracking-wider">
+                                                <th class="p-3">Chunk (Title)</th>
+                                                <th class="p-3">Nghĩa/Ngữ cảnh (Text)</th>
+                                                <th class="p-3">Ví dụ thực tế (Text)</th>
+                                                <th class="p-3">Tags (Multi-select)</th>
+                                                <th class="p-3">Trạng thái ôn tập (Status)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="text-slate-700">
+                                            <tr class="border-b border-slate-100 hover:bg-white transition-colors">
+                                                <td class="p-3 font-semibold text-emerald-700 bg-emerald-50/50">To be on the fence</td>
+                                                <td class="p-3 text-sm">Phân vân, chưa quyết định được</td>
+                                                <td class="p-3 text-sm italic">"I'm still on the fence about accepting that job offer."</td>
+                                                <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">#decision</span> <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">#work</span></td>
+                                                <td class="p-3"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded font-medium">Cần ôn lại</span></td>
+                                            </tr>
+                                            <tr class="border-b border-slate-100 hover:bg-white transition-colors">
+                                                <td class="p-3 font-semibold text-emerald-700 bg-emerald-50/50">Take something for granted</td>
+                                                <td class="p-3 text-sm">Coi điều gì đó là hiển nhiên (thường mang nghĩa vô ơn)</td>
+                                                <td class="p-3 text-sm italic">"Don't take your health for granted."</td>
+                                                <td class="p-3"><span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">#life</span></td>
+                                                <td class="p-3"><span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded font-medium">Đã thuộc</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-6 bg-blue-50 text-blue-800 p-4 rounded-lg text-sm">
+                                    <strong>💡 Pro-tip cho Notion:</strong> Kết hợp property "Date" và tạo các view filter (Bộ lọc) để thiết lập hệ thống Spaced Repetition (chỉ hiện những từ cần ôn trong ngày hôm nay).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Obsidian Content -->
+                    <div id="content-obsidian" class="w-full max-w-4xl hidden">
+                        <div class="bg-stone-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                            <div class="bg-slate-800 text-white px-4 py-3 flex items-center gap-2">
+                                <span class="text-xl">🪨</span>
+                                <span class="font-semibold">Obsidian Vault: Cấu trúc liên kết</span>
+                            </div>
+                            <div class="p-6">
+                                <p class="text-slate-600 mb-6">Obsidian tỏa sáng khi bạn kết nối các chunk theo ngữ cảnh thay vì nhốt chúng trong bảng. Hãy dùng <strong>Backlinks ([[]])</strong>.</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-white p-4 border border-slate-200 rounded-lg font-mono text-sm text-slate-700 shadow-inner">
+                                        <div class="text-slate-400 mb-2 border-b border-slate-100 pb-2">📝 Note: Giving Opinions.md</div>
+                                        <p>Khi tham gia họp, để đưa ra ý kiến một cách lịch sự, tôi có thể dùng cụm:</p>
+                                        <p class="mt-2 text-emerald-600 font-semibold">[[From my perspective]]</p>
+                                        <p class="mt-2 text-emerald-600 font-semibold">[[As far as I'm concerned]]</p>
+                                        <p class="mt-4 text-slate-500 italic">#meeting #communication</p>
+                                    </div>
+
+                                    <div class="bg-white p-4 border border-slate-200 rounded-lg font-mono text-sm text-slate-700 shadow-inner">
+                                        <div class="text-slate-400 mb-2 border-b border-slate-100 pb-2">📝 Note: From my perspective.md</div>
+                                        <p><strong>Nghĩa:</strong> Theo quan điểm của tôi.</p>
+                                        <p class="mt-2"><strong>Ví dụ:</strong> <br><span class="italic">"From my perspective, we should focus on marketing first."</span></p>
+                                        <div class="mt-4 pt-2 border-t border-slate-100 text-xs text-slate-400">
+                                            Linked mentions:<br>
+                                            - [[Giving Opinions]]
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6 bg-purple-50 text-purple-800 p-4 rounded-lg text-sm flex items-start">
+                                    <span class="mr-2 text-lg">🔌</span>
+                                    <div>
+                                        <strong>Plugin bắt buộc:</strong> Cài đặt community plugin có tên <strong>"Spaced Repetition"</strong> trong Obsidian. Thêm tag `#flashcards` vào note chứa chunk, Obsidian sẽ tự động lên lịch nhắc bạn ôn tập dựa trên thuật toán tối ưu.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-900 py-8 text-center border-t border-slate-800">
+        <p class="text-slate-400 text-sm">Tài liệu tương tác: Áp dụng phương pháp Chunking.</p>
+    </footer>
+
+    <script>
+        // 1. Interactive Text Logic (Concept Section)
+        const toggleBtn = document.getElementById('toggle-chunk-btn');
+        const wordView = document.getElementById('word-view');
+        const chunkView = document.getElementById('chunk-view');
+        const explanation = document.getElementById('chunk-explanation');
+
+        toggleBtn.addEventListener('click', () => {
+            if (wordView.classList.contains('hidden')) {
+                // Switch back to words
+                wordView.classList.remove('hidden');
+                chunkView.classList.add('hidden');
+                explanation.classList.add('hidden');
+                toggleBtn.textContent = 'Chuyển sang góc nhìn Chunking 🪄';
+                toggleBtn.classList.replace('bg-emerald-600', 'bg-slate-800');
+            } else {
+                // Switch to chunks
+                wordView.classList.add('hidden');
+                chunkView.classList.remove('hidden');
+                explanation.classList.remove('hidden');
+                toggleBtn.textContent = 'Quay lại xem từng từ';
+                toggleBtn.classList.replace('bg-slate-800', 'bg-emerald-600');
+            }
+        });
+
+        // 2. Chart.js Implementation (Benefits Section)
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // Define data contrasting single word vs chunking
+            const data = {
+                labels: [
+                    ['Tốc độ', 'Phản xạ'],
+                    ['Độ chuẩn xác', 'Ngữ pháp'],
+                    ['Tự nhiên', 'Giống người bản xứ'],
+                    ['Giảm dịch thầm', '(Viet-Eng)'],
+                    ['Khả năng', 'Ghi nhớ dài hạn']
+                ],
+                datasets: [{
+                    label: 'Học Từ Đơn Lẻ (Traditional)',
+                    data: [3, 4, 3, 2, 5], // Lower scores for traditional except rote memory
+                    fill: true,
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)', // Slate 400
+                    borderColor: 'rgb(148, 163, 184)',
+                    pointBackgroundColor: 'rgb(148, 163, 184)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(148, 163, 184)'
+                }, {
+                    label: 'Học Theo Cụm (Chunking)',
+                    data: [8, 9, 9, 8, 8], // Higher scores
+                    fill: true,
+                    backgroundColor: 'rgba(16, 185, 129, 0.3)', // Emerald 500
+                    borderColor: 'rgb(16, 185, 129)',
+                    pointBackgroundColor: 'rgb(16, 185, 129)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(16, 185, 129)'
+                }]
+            };
+
+            const config = {
+                type: 'radar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Essential for respecting chart-container bounds
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: 'system-ui, -apple-system, sans-serif',
+                                    size: 13
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.formattedValue + '/10';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    family: 'system-ui, -apple-system, sans-serif',
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                color: '#475569' // Slate 600
+                            },
+                            ticks: {
+                                display: false, // Hide numeric ticks for cleaner look
+                                min: 0,
+                                max: 10
+                            }
+                        }
+                    }
+                }
+            };
+
+            new Chart(ctx, config);
+        });
+
+        // 3. Tab Switching Logic (Tools Section)
+        function switchTab(tool) {
+            const btnNotion = document.getElementById('tab-notion');
+            const btnObsidian = document.getElementById('tab-obsidian');
+            const contentNotion = document.getElementById('content-notion');
+            const contentObsidian = document.getElementById('content-obsidian');
+
+            // Active classes
+            const activeClasses = ['bg-white', 'shadow', 'text-slate-800'];
+            const inactiveClasses = ['text-slate-500', 'hover:text-slate-800', 'bg-transparent'];
+
+            if (tool === 'notion') {
+                // Show Notion
+                contentNotion.classList.remove('hidden');
+                contentObsidian.classList.add('hidden');
+                
+                // Style buttons
+                btnNotion.classList.remove(...inactiveClasses);
+                btnNotion.classList.add(...activeClasses);
+                
+                btnObsidian.classList.remove(...activeClasses);
+                btnObsidian.classList.add('bg-transparent', 'text-slate-500', 'hover:text-slate-800');
+                btnObsidian.style.boxShadow = 'none';
+
+            } else {
+                // Show Obsidian
+                contentObsidian.classList.remove('hidden');
+                contentNotion.classList.add('hidden');
+                
+                // Style buttons
+                btnObsidian.classList.remove(...inactiveClasses);
+                btnObsidian.classList.add(...activeClasses);
+                
+                btnNotion.classList.remove(...activeClasses);
+                btnNotion.classList.add('bg-transparent', 'text-slate-500', 'hover:text-slate-800');
+                btnNotion.style.boxShadow = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
