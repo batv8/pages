@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Architecture Visualizer 2D</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        .node-container {
+            transition: all 0.5s ease-in-out;
+        }
+        @keyframes flow {
+            from { stroke-dashoffset: 24; }
+            to { stroke-dashoffset: 0; }
+        }
+        .anim-flow {
+            animation: flow 0.5s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-200 p-8 font-sans selection:bg-blue-500/30">
+    
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold flex items-center gap-3 mb-2">
+                <i class="ph-fill ph-faders text-blue-500 text-4xl"></i>
+                VPN Architecture Visualizer 2D (Advanced)
+            </h1>
+            <p class="text-slate-400">
+                Bản đồ định tuyến cấp thấp. Hiển thị rõ vai trò trung tâm của <span class="text-indigo-400 font-bold">OS Router</span> và card <span class="text-emerald-400 font-bold">Loopback</span> trong giao tiếp ứng dụng.
+            </p>
+        </div>
+
+        <!-- Bảng điều khiển (Control Panel) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-8 flex flex-col md:flex-row gap-8 items-center justify-between shadow-xl">
+            <div class="flex flex-col md:flex-row gap-6 w-full md:w-auto">
+                <!-- Toggle 1: Route -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-slate-400 uppercase tracking-wider">Lệnh OS (Route)</label>
+                    <button id="btn-route" onclick="toggleRoute()" class="flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all bg-indigo-900/40 border-indigo-500 text-indigo-300 hover:border-indigo-400">
+                        <i id="icon-route" class="ph-fill ph-check-circle text-xl"></i>
+                        <span id="text-route">Ghi đè 0.0.0.0 (Vào TUN)</span>
+                    </button>
+                </div>
+                <!-- Toggle 2: Proxy -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-slate-400 uppercase tracking-wider">SOCKS5 Proxy (Cục bộ)</label>
+                    <button id="btn-proxy" onclick="toggleProxy()" class="flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all bg-slate-800 border-red-900/50 text-red-400 hover:border-red-500">
+                        <i id="icon-proxy" class="ph-fill ph-warning-circle text-xl"></i>
+                        <span id="text-proxy">Chưa bật (Tắt)</span>
+                    </button>
+                </div>
+            </div>
+
+            <button id="btn-run" onclick="runSimulation()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+                <i class="ph-fill ph-play text-xl"></i> 
+                GỬI GÓI TIN MẠNG
+            </button>
+        </div>
+
+        <!-- Status Log Box -->
+        <div id="log-box" class="mb-8 p-4 border rounded-lg flex items-start gap-4 transition-colors bg-slate-900 border-slate-800 text-slate-400">
+            <i id="log-icon" class="ph-fill ph-info mt-1 text-xl flex-shrink-0"></i>
+            <div id="log-text" class="text-lg font-medium">Bấm "Gửi gói tin" để xem luồng dữ liệu chạy qua OS Router.</div>
+        </div>
+
+        <!-- 2D Canvas Map -->
+        <div class="relative w-full aspect-[2/1] bg-[#0a0f1c] rounded-2xl border-2 border-slate-800 overflow-hidden shadow-2xl p-6">
+            <div class="absolute inset-0 opacity-50" style="background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+            <!-- SVG Container -->
+            <svg id="edges-container" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></svg>
+
+            <!-- Nơi chứa các thực thể (Nodes) -->
+            <div id="nodes-container" class="absolute inset-0 z-10 pointer-events-none"></div>
+        </div>
+
+        <!-- Chú thích (Đã được chuyển ra ngoài khung mô phỏng để tránh đè object) -->
+        <div class="mt-4 flex flex-wrap gap-6 justify-center bg-slate-900 border border-slate-800 p-4 rounded-xl text-sm text-slate-400 shadow-lg">
+            <div class="flex items-center gap-2">
+                <svg width="24" height="6"><line x1="0" y1="3" x2="24" y2="3" stroke="#10b981" stroke-width="4" stroke-dasharray="6,4"/></svg> 
+                <span class="font-medium text-slate-300">Đường đi bình thường (Success)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg width="24" height="6"><line x1="0" y1="3" x2="24" y2="3" stroke="#f59e0b" stroke-width="4" stroke-dasharray="6,4"/></svg> 
+                <span class="font-medium text-slate-300">Bypass Route (Bỏ qua TUN)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg width="24" height="6"><line x1="0" y1="3" x2="24" y2="3" stroke="#ef4444" stroke-width="4" stroke-dasharray="6,4"/></svg> 
+                <span class="font-medium text-slate-300">Connection Refused (Rớt mạng)</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isVpnRouted = true;
+        let isProxyRunning = false;
+        let simState = 'idle'; 
+        let activeEdge = null;
+        let activeNode = null;
+
+        // Tọa độ mới - Lấy OS Router làm trung tâm điều hướng
+        const nodes = {
+            browser:   { id: 'browser',   label: 'Trình duyệt',      icon: 'ph-laptop',             x: 8,  y: 50, colorBase: 'blue' },
+            os:        { id: 'os',        label: 'OS Router',        icon: 'ph-arrows-split',       x: 25, y: 50, colorBase: 'indigo' },
+            tun:       { id: 'tun',       label: 'Card ảo (TUN)',    icon: 'ph-plugs-connected',    x: 25, y: 80, colorBase: 'purple' },
+            tun2socks: { id: 'tun2socks', label: 'tun2socks',        icon: 'ph-cpu',                x: 45, y: 80, colorBase: 'pink' },
+            loopback:  { id: 'loopback',  label: 'Loopback (127.x)', icon: 'ph-arrows-clockwise',   x: 45, y: 50, colorBase: 'emerald' },
+            proxy:     { id: 'proxy',     label: 'Proxy Cục bộ',     icon: 'ph-hard-drives',        x: 45, y: 20, colorBase: 'amber' },
+            wifi:      { id: 'wifi',      label: 'Card Mạng (PC)',   icon: 'ph-pci-slot',           x: 65, y: 75, colorBase: 'emerald' },
+            
+            // Ngoài không gian vật lý
+            modem:     { id: 'modem',     label: 'Modem (ISP)',      icon: 'ph-router-router',      x: 82, y: 75, colorBase: 'emerald' }, 
+            internet:  { id: 'internet',  label: 'Internet',         icon: 'ph-globe',              x: 95, y: 75, colorBase: 'sky' },
+        };
+
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        function renderMap() {
+            renderNodes();
+            renderEdges();
+            updateControlUI();
+        }
+
+        function renderNodes() {
+            const container = document.getElementById('nodes-container');
+            let html = '';
+
+            for (const key in nodes) {
+                const node = nodes[key];
+                const isActive = activeNode === node.id;
+                const isFaded = !isVpnRouted && (node.id === 'tun' || node.id === 'tun2socks' || node.id === 'proxy' || node.id === 'loopback');
+                const opacityClass = isFaded ? 'opacity-30 grayscale' : 'opacity-100';
+                
+                const colorMap = {
+                    blue: { border: 'border-blue-400', shadow: 'shadow-[0_0_20px_#60a5fa]', text: 'text-blue-400' },
+                    indigo: { border: 'border-indigo-400', shadow: 'shadow-[0_0_20px_#818cf8]', text: 'text-indigo-400' },
+                    emerald: { border: 'border-emerald-400', shadow: 'shadow-[0_0_20px_#34d399]', text: 'text-emerald-400' },
+                    purple: { border: 'border-purple-400', shadow: 'shadow-[0_0_20px_#a78bfa]', text: 'text-purple-400' },
+                    pink: { border: 'border-pink-400', shadow: 'shadow-[0_0_20px_#f472b6]', text: 'text-pink-400' },
+                    amber: { border: 'border-amber-400', shadow: 'shadow-[0_0_20px_#fbbf24]', text: 'text-amber-400' },
+                    sky: { border: 'border-sky-400', shadow: 'shadow-[0_0_20px_#38bdf8]', text: 'text-sky-400' }
+                };
+
+                const colors = colorMap[node.colorBase];
+                const boxClasses = isActive ? `${colors.border} ${colors.shadow} scale-110 ${colors.text}` : `border-slate-700 text-slate-500 bg-slate-900`;
+                const labelClasses = isActive ? `${colors.border} ${colors.text} border-opacity-50` : `border-slate-800 text-slate-500 bg-slate-900`;
+
+                let alertHtml = '';
+                if (node.id === 'proxy' && !isProxyRunning && isVpnRouted) {
+                    alertHtml = `<div class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 text-red-500 bg-slate-900 rounded-full border-2 border-slate-900 z-30">
+                        <i class="ph-fill ph-x-circle text-2xl"></i>
+                    </div>`;
+                }
+
+                html += `
+                    <div class="node-container absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 z-20 ${opacityClass}"
+                         style="left: ${node.x}%; top: ${node.y}%;">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 bg-slate-900 ${boxClasses}">
+                            <i class="ph ${node.icon} text-4xl"></i>
+                        </div>
+                        <div class="text-sm font-semibold whitespace-nowrap px-3 py-1 rounded-full border ${labelClasses}">
+                            ${node.label}
+                        </div>
+                        ${alertHtml}
+                    </div>
+                `;
+            }
+
+            // Biên giới Local PC (Chỉ bọc đến Wifi)
+            html += `
+                <div class="absolute border-2 border-slate-800 border-dashed rounded-3xl pointer-events-none opacity-50 z-0"
+                     style="left: 2%; top: 5%; width: 70%; height: 90%;">
+                     <div class="absolute -top-3 left-6 bg-[#0a0f1c] px-2 text-slate-500 font-bold text-sm tracking-widest">MÁY TÍNH CỦA BẠN (LOCAL PC)</div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function renderEdges() {
+            const container = document.getElementById('edges-container');
+            const edges = [
+                { id: 'browser-os',       from: nodes.browser,   to: nodes.os },
+                { id: 'os-tun',           from: nodes.os,        to: nodes.tun },
+                { id: 'tun-tun2socks',    from: nodes.tun,       to: nodes.tun2socks },
+                { id: 'tun2socks-loopback', from: nodes.tun2socks, to: nodes.loopback }, // tun2socks dial() tới 127.0.0.1
+                { id: 'loopback-proxy',   from: nodes.loopback,  to: nodes.proxy },
+                { id: 'loopback-fail',    from: nodes.loopback,  to: {x: 45, y: 35}, type: 'fail' }, // Đứt giữa Loopback và Proxy
+                { id: 'proxy-os',         from: nodes.proxy,     to: nodes.os,       type: 'bypass' }, // Proxy dial() ra ngoài, OS nhận lại
+                { id: 'os-wifi-bypass',   from: nodes.os,        to: nodes.wifi,     type: 'bypass' }, // Bypass route chuyển tới Wifi
+                { id: 'os-wifi-direct',   from: nodes.os,        to: nodes.wifi }, // Khi tắt VPN
+                { id: 'wifi-modem',       from: nodes.wifi,      to: nodes.modem },
+                { id: 'modem-internet',   from: nodes.modem,     to: nodes.internet }
+            ];
+
+            const colors = { normal: '#10b981', bypass: '#f59e0b', fail: '#ef4444', idle: '#334155' };
+            let svgHtml = '';
+            
+            edges.forEach(edge => {
+                const isActive = activeEdge === edge.id;
+                if (edge.type === 'fail' && !isActive) return; 
+
+                let strokeColor = colors.idle;
+                let strokeWidth = isActive ? 5 : 3;
+                let opacity = isActive ? 1 : 0.4;
+                let dashArray = isActive ? "12, 12" : "6, 6";
+                let animClass = isActive ? "anim-flow" : "";
+
+                if (isActive) {
+                    if (edge.type === 'fail') strokeColor = colors.fail;
+                    else if (edge.type === 'bypass') strokeColor = colors.bypass;
+                    else strokeColor = colors.normal;
+                }
+
+                svgHtml += `
+                    <line x1="${edge.from.x}%" y1="${edge.from.y}%" 
+                          x2="${edge.to.x}%" y2="${edge.to.y}%" 
+                          stroke="${strokeColor}" stroke-width="${strokeWidth}" 
+                          stroke-dasharray="${dashArray}" stroke-linecap="round" opacity="${opacity}"
+                          class="transition-all duration-500 ${animClass}" />
+                `;
+
+                if (isActive) {
+                    svgHtml += `
+                        <circle r="6" fill="#ffffff" filter="drop-shadow(0 0 4px rgba(255,255,255,0.8))">
+                            <animate attributeName="cx" values="${edge.from.x}%;${edge.to.x}%" dur="0.8s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values="${edge.from.y}%;${edge.to.y}%" dur="0.8s" repeatCount="indefinite" />
+                        </circle>
+                    `;
+                }
+            });
+            container.innerHTML = svgHtml;
+        }
+
+        function updateControlUI() {
+            const btnRoute = document.getElementById('btn-route');
+            const iconRoute = document.getElementById('icon-route');
+            if (isVpnRouted) {
+                btnRoute.className = "flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all bg-indigo-900/40 border-indigo-500 text-indigo-300 hover:border-indigo-400";
+                iconRoute.className = "ph-fill ph-check-circle text-xl";
+            } else {
+                btnRoute.className = "flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-500";
+                iconRoute.className = "ph-fill ph-x-circle text-xl";
+            }
+
+            const btnProxy = document.getElementById('btn-proxy');
+            const iconProxy = document.getElementById('icon-proxy');
+            const textProxy = document.getElementById('text-proxy');
+            if (isProxyRunning) {
+                btnProxy.className = "flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all bg-amber-900/40 border-amber-500 text-amber-300 hover:border-amber-400";
+                iconProxy.className = "ph-fill ph-check-circle text-xl";
+                textProxy.innerText = "Đang chạy (Live)";
+            } else {
+                btnProxy.className = "flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all bg-slate-800 border-red-900/50 text-red-400 hover:border-red-500";
+                iconProxy.className = "ph-fill ph-warning-circle text-xl";
+                textProxy.innerText = "Chưa bật (Tắt)";
+            }
+
+            document.getElementById('btn-run').disabled = (simState === 'running');
+            document.getElementById('btn-route').disabled = (simState === 'running');
+            document.getElementById('btn-proxy').disabled = (simState === 'running');
+
+            const logBox = document.getElementById('log-box');
+            const logIcon = document.getElementById('log-icon');
+            logBox.className = "mb-8 p-4 border rounded-lg flex items-start gap-4 transition-colors ";
+            if (simState === 'fail') {
+                logBox.className += "bg-red-950/40 border-red-800/50 text-red-200";
+                logIcon.className = "ph-fill ph-warning-circle mt-1 text-2xl flex-shrink-0";
+            } else if (simState === 'success') {
+                logBox.className += "bg-emerald-950/40 border-emerald-800/50 text-emerald-200";
+                logIcon.className = "ph-fill ph-check-circle mt-1 text-2xl flex-shrink-0";
+            } else if (simState === 'running') {
+                logBox.className += "bg-blue-950/40 border-blue-800/50 text-blue-200";
+                logIcon.className = "ph-fill ph-cpu mt-1 text-2xl flex-shrink-0 animate-pulse";
+            } else {
+                logBox.className += "bg-slate-900 border-slate-800 text-slate-400";
+                logIcon.className = "ph-fill ph-info mt-1 text-2xl flex-shrink-0";
+            }
+        }
+
+        function setLog(text) {
+            document.getElementById('log-text').innerHTML = text;
+        }
+
+        function toggleRoute() {
+            if (simState === 'running') return;
+            isVpnRouted = !isVpnRouted;
+            renderMap();
+        }
+
+        function toggleProxy() {
+            if (simState === 'running') return;
+            isProxyRunning = !isProxyRunning;
+            renderMap();
+        }
+
+        async function runSimulation() {
+            simState = 'running';
+            activeNode = null;
+            activeEdge = null;
+            renderMap();
+
+            activeNode = 'browser';
+            setLog('<b>1.</b> Trình duyệt gửi gói tin truy cập 8.8.8.8.');
+            renderMap(); await delay(1200);
+
+            activeEdge = 'browser-os';
+            activeNode = 'os';
+            setLog('<b>2. OS Kernel:</b> HĐH nhận dữ liệu và tra cứu bảng định tuyến (Routing Table).');
+            renderMap(); await delay(1500);
+
+            if (!isVpnRouted) {
+                activeEdge = 'os-wifi-direct';
+                activeNode = 'wifi';
+                setLog('<b>3. VPN Tắt:</b> OS ném thẳng ra Card Wifi.');
+                renderMap(); await delay(1200);
+
+                activeEdge = 'wifi-modem';
+                activeNode = 'modem';
+                setLog('<b>4.</b> Card Wifi phát sóng tới Modem nhà mạng.');
+                renderMap(); await delay(1200);
+
+                activeEdge = 'modem-internet';
+                activeNode = 'internet';
+                setLog('<b>5. THÀNH CÔNG:</b> Đã tới Internet, IP gốc bị lộ.');
+                simState = 'success';
+            } else {
+                activeEdge = 'os-tun';
+                activeNode = 'tun';
+                setLog('<b>3. Bẻ Route 0.0.0.0:</b> OS ném gói tin vào Card ảo TUN.');
+                renderMap(); await delay(1500);
+
+                activeEdge = 'tun-tun2socks';
+                activeNode = 'tun2socks';
+                setLog('<b>4.</b> tun2socks đọc gói tin IP, dùng gVisor dịch thành TCP.');
+                renderMap(); await delay(1500);
+
+                // Điểm khác biệt mấu chốt: tun2socks kết nối Proxy Cục bộ
+                activeEdge = 'tun2socks-loopback';
+                activeNode = 'loopback';
+                setLog('<b>5. OS Socket:</b> tun2socks gọi net.Dial tới 127.0.0.1. OS lại nhận được và đưa vào Card Loopback.');
+                renderMap(); await delay(1500);
+
+                if (!isProxyRunning) {
+                    activeEdge = 'loopback-fail';
+                    activeNode = 'loopback';
+                    setLog('<b>6. LỖI MẤT MẠNG:</b> Card Loopback báo không có phần mềm nào đang lắng nghe ở cổng 1080. Gói tin bị huỷ!');
+                    simState = 'fail';
+                } else {
+                    activeEdge = 'loopback-proxy';
+                    activeNode = 'proxy';
+                    setLog('<b>6.</b> SOCKS5 Proxy nhận gói tin từ Loopback, thực hiện bọc (Relay) an toàn.');
+                    renderMap(); await delay(1500);
+
+                    // Proxy kết nối Internet (Đi lại qua OS)
+                    activeEdge = 'proxy-os';
+                    activeNode = 'os';
+                    setLog('<b>7. Proxy Dial:</b> SOCKS5 yêu cầu kết nối 8.8.8.8. Gói tin lại quay về OS Router một lần nữa!');
+                    renderMap(); await delay(1500);
+
+                    activeEdge = 'os-wifi-bypass';
+                    activeNode = 'wifi';
+                    setLog('<b>8. Bypass Route:</b> OS Router thấy luật Bypass cho SOCKS5, nên ném ra Card Wifi thay vì ném lại vào TUN.');
+                    renderMap(); await delay(1500);
+
+                    activeEdge = 'wifi-modem';
+                    activeNode = 'modem';
+                    setLog('<b>9.</b> Card Wifi phát sóng tới Modem nhà mạng.');
+                    renderMap(); await delay(1200);
+
+                    activeEdge = 'modem-internet';
+                    activeNode = 'internet';
+                    setLog('<b>10. HOÀN HẢO:</b> Gói tin ra Internet. Bí mật và an toàn!');
+                    simState = 'success';
+                }
+            }
+            renderMap();
+        }
+
+        renderMap();
+    </script>
+</body>
+</html>
