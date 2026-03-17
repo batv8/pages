@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tích hợp Traveloka - Channel Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
+
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <div class="flex items-center space-x-2 text-sm text-slate-500 mb-2">
+                    <span>Channel Manager</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    <span>Kênh bán (OTA)</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    <span class="font-medium text-slate-900">Traveloka</span>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                    <span class="bg-[#1BA0E2] text-white p-2 rounded-lg">
+                        <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M21.231 16.486l-4.102-6.565c-.886-1.418-2.585-1.418-3.471 0l-4.102 6.565c-.886 1.418-.037 3.264 1.735 3.264h8.205c1.772 0 2.621-1.846 1.735-3.264zM12 7.75c1.518 0 2.75-1.232 2.75-2.75S13.518 2.25 12 2.25 9.25 3.482 9.25 5 10.482 7.75 12 7.75z"/>
+                        </svg>
+                    </span>
+                    Tích hợp Traveloka
+                </h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="statusBadge" class="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 bg-slate-200 text-slate-600 transition-colors">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i> Chưa kết nối
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            
+            <!-- Tabs Navigation -->
+            <div class="flex border-b border-slate-200 overflow-x-auto">
+                <button id="btn-connection" onclick="switchTab('connection')" class="tab-btn flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap border-b-2 border-[#1BA0E2] text-[#1BA0E2]">
+                    <i data-lucide="link" class="w-4.5 h-4.5"></i> Thiết lập Kết nối
+                </button>
+                <button id="btn-settings" onclick="switchTab('settings')" class="tab-btn flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap text-slate-500 hover:text-slate-700 hover:bg-slate-50">
+                    <i data-lucide="settings" class="w-4.5 h-4.5"></i> Cài đặt Đồng bộ
+                </button>
+                <button id="btn-mapping" onclick="switchTab('mapping')" class="tab-btn flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap text-slate-500 hover:text-slate-700 hover:bg-slate-50">
+                    <i data-lucide="map" class="w-4.5 h-4.5"></i> Ghép nối (Mapping)
+                </button>
+                <button id="btn-logs" onclick="switchTab('logs')" class="tab-btn flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap text-slate-500 hover:text-slate-700 hover:bg-slate-50">
+                    <i data-lucide="activity" class="w-4.5 h-4.5"></i> Nhật ký (Logs)
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6 md:p-8 relative min-h-[400px]">
+                
+                <!-- TAB: KẾT NỐI -->
+                <div id="connection" class="tab-content max-w-2xl space-y-8 animate-fade-in">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 text-blue-800">
+                        <i data-lucide="info" class="shrink-0 mt-0.5 w-5 h-5"></i>
+                        <div class="text-sm space-y-2">
+                            <p class="font-semibold">Hướng dẫn kết nối:</p>
+                            <ol class="list-decimal list-inside space-y-1 ml-1">
+                                <li>Đăng nhập vào trang quản trị Traveloka TERA của bạn.</li>
+                                <li>Truy cập mục <strong>Property Details &gt; Channel Manager</strong>.</li>
+                                <li>Chọn <strong>[Tên Hệ Thống Của Bạn]</strong> từ danh sách và bấm "Kích hoạt".</li>
+                                <li>Copy mã <strong>Property ID</strong> và dán vào ô bên dưới.</li>
+                            </ol>
+                            <a href="#" class="inline-flex items-center gap-1 text-[#1BA0E2] hover:underline font-medium mt-2">
+                                Xem tài liệu hướng dẫn chi tiết <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="block text-sm font-medium text-slate-700">
+                            Traveloka Property ID / Hotel ID
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="propertyId" placeholder="VD: 3000012345" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1BA0E2] focus:border-[#1BA0E2] outline-none transition-all" />
+                            <button id="btnTestConn" onclick="testConnection()" class="px-6 py-2 bg-[#1BA0E2] text-white rounded-lg font-medium hover:bg-[#1588c2] transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap">
+                                <i id="testConnIcon" data-lucide="link" class="w-4.5 h-4.5"></i> 
+                                <span id="testConnText">Kiểm tra kết nối</span>
+                            </button>
+                        </div>
+                        <p id="successMsg" class="text-sm text-emerald-600 flex items-center gap-1 hidden">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i> Kết nối thành công! Hệ thống đã sẵn sàng đồng bộ.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- TAB: CÀI ĐẶT ĐỒNG BỘ -->
+                <div id="settings" class="tab-content hidden max-w-3xl space-y-8 animate-fade-in">
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Chiều đẩy lên -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-semibold border-b pb-2">Đồng bộ từ CM lên Traveloka</h3>
+                            
+                            <div class="space-y-4">
+                                <label class="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 cursor-pointer" onclick="toggleSync(this)">
+                                    <div>
+                                        <p class="font-medium text-slate-900">Phòng trống (Availability)</p>
+                                        <p class="text-sm text-slate-500">Tự động đẩy số lượng phòng trống</p>
+                                    </div>
+                                    <div class="toggle-track w-12 h-6 rounded-full p-1 transition-colors bg-emerald-500">
+                                        <div class="toggle-circle w-4 h-4 rounded-full bg-white transition-transform translate-x-6"></div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 cursor-pointer" onclick="toggleSync(this)">
+                                    <div>
+                                        <p class="font-medium text-slate-900">Giá phòng (Rates)</p>
+                                        <p class="text-sm text-slate-500">Tự động đẩy giá phòng cập nhật nhất</p>
+                                    </div>
+                                    <div class="toggle-track w-12 h-6 rounded-full p-1 transition-colors bg-emerald-500">
+                                        <div class="toggle-circle w-4 h-4 rounded-full bg-white transition-transform translate-x-6"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Chiều kéo về -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-semibold border-b pb-2">Đồng bộ từ Traveloka về CM</h3>
+                            <label class="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 cursor-pointer" onclick="toggleSync(this)">
+                                <div>
+                                    <p class="font-medium text-slate-900">Tải Booking</p>
+                                    <p class="text-sm text-slate-500">Tự động kéo đặt phòng mới, hủy, sửa</p>
+                                </div>
+                                <div class="toggle-track w-12 h-6 rounded-full p-1 transition-colors bg-emerald-500">
+                                    <div class="toggle-circle w-4 h-4 rounded-full bg-white transition-transform translate-x-6"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Điều chỉnh giá -->
+                    <div class="p-6 bg-slate-50 border rounded-xl">
+                        <h3 class="text-lg font-semibold mb-4">Điều chỉnh giá bán (Price Markup/Markdown)</h3>
+                        <p class="text-sm text-slate-600 mb-4">Áp dụng công thức tăng/giảm giá tự động khi đẩy từ Channel Manager lên Traveloka để bù trừ chi phí hoa hồng.</p>
+                        
+                        <div class="flex flex-wrap items-center gap-4">
+                            <select class="border border-slate-300 rounded-lg px-4 py-2 focus:ring-[#1BA0E2] outline-none bg-white">
+                                <option>Cộng thêm (+)</option>
+                                <option>Trừ đi (-)</option>
+                            </select>
+                            <input type="number" value="15" class="w-24 px-4 py-2 border border-slate-300 rounded-lg text-right focus:ring-[#1BA0E2] outline-none" />
+                            <select class="border border-slate-300 rounded-lg px-4 py-2 focus:ring-[#1BA0E2] outline-none bg-white">
+                                <option>Phần trăm (%)</option>
+                                <option>VNĐ (Số tiền cố định)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button id="btnSaveSettings" onclick="saveSettings()" class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors">
+                            <i id="saveSettingsIcon" data-lucide="save" class="w-4.5 h-4.5"></i> 
+                            <span id="saveSettingsText">Lưu cài đặt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB: MAPPING -->
+                <div id="mapping" class="tab-content hidden space-y-6 animate-fade-in">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                        <p class="text-slate-600">Ghép nối phòng trên phần mềm của bạn với phòng tương ứng trên Traveloka.</p>
+                        <button class="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 text-slate-700 whitespace-nowrap">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Tải lại dữ liệu từ OTA
+                        </button>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="p-4 font-semibold text-slate-700 w-5/12">Hệ thống của bạn (Channel Manager)</th>
+                                    <th class="p-4 w-12 text-center"></th>
+                                    <th class="p-4 font-semibold text-slate-700 w-6/12 flex items-center gap-2">
+                                        <img src="https://ik.imagekit.io/tvlk/image/imageResource/2023/09/27/1695804562548-6a3f019fc25a8cc10fdfad1ba9321526.png?tr=q-75,w-120" alt="TVLK" class="h-4 object-contain opacity-50 grayscale mix-blend-multiply" />
+                                        Mã phòng / Giá trên Traveloka
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <!-- Row 1 -->
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-medium text-slate-900">Phòng Standard</div>
+                                        <div class="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                                            <div class="w-2 h-2 rounded-full bg-slate-300"></div> Giá Tiêu chuẩn (Không hoàn tiền)
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <i data-lucide="link" class="w-4 h-4 text-slate-300 inline-block"></i>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="space-y-2">
+                                            <select onchange="updateRowStatus(this)" class="w-full text-sm border border-amber-300 bg-amber-50 text-amber-700 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors">
+                                                <option value="">-- Chọn Loại phòng (Room Type) --</option>
+                                                <option value="room_std">Standard Room (TVLK)</option>
+                                                <option value="room_dlx">Deluxe Double Room (TVLK)</option>
+                                            </select>
+                                            <select onchange="updateRowStatus(this)" class="w-full text-sm border border-amber-300 bg-amber-50 text-amber-700 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors">
+                                                <option value="">-- Chọn Gói giá (Rate Plan) --</option>
+                                                <option value="rate_std">Room Only (Không ăn sáng)</option>
+                                                <option value="rate_bf">Breakfast Included (Bao gồm ăn sáng)</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 2 -->
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-medium text-slate-900">Phòng Standard</div>
+                                        <div class="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                                            <div class="w-2 h-2 rounded-full bg-slate-300"></div> Giá Bao gồm bữa sáng
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <i data-lucide="link" class="w-4 h-4 text-[#1BA0E2] inline-block"></i>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="space-y-2">
+                                            <select onchange="updateRowStatus(this)" class="w-full text-sm border border-slate-300 bg-white text-slate-900 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors">
+                                                <option value="">-- Chọn Loại phòng (Room Type) --</option>
+                                                <option value="room_std" selected>Standard Room (TVLK)</option>
+                                                <option value="room_dlx">Deluxe Double Room (TVLK)</option>
+                                            </select>
+                                            <select onchange="updateRowStatus(this)" class="w-full text-sm border border-slate-300 bg-white text-slate-900 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors">
+                                                <option value="">-- Chọn Gói giá (Rate Plan) --</option>
+                                                <option value="rate_std">Room Only (Không ăn sáng)</option>
+                                                <option value="rate_bf" selected>Breakfast Included (Bao gồm ăn sáng)</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 3 -->
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-medium text-slate-900">Phòng Deluxe</div>
+                                        <div class="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                                            <div class="w-2 h-2 rounded-full bg-slate-300"></div> Giá Tiêu chuẩn
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <i data-lucide="link" class="w-4 h-4 text-[#1BA0E2] inline-block"></i>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="space-y-2">
+                                            <select onchange="updateRowStatus(this)" class="w-full text-sm border border-slate-300 bg-white text-slate-900 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors">
+                                                <option value="">-- Chọn Loại phòng (Room Type) --</option>
+                                                <option value="room_std">Standard Room (TVLK)</option>
+                                                <option value="room_dlx" selected>Deluxe Double Room (TVLK)</option>
+                                            </select>
+                                            <select onchange="updateRowStatus(this)" class="w-full text-sm border border-slate-300 bg-white text-slate-900 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors">
+                                                <option value="">-- Chọn Gói giá (Rate Plan) --</option>
+                                                <option value="rate_std" selected>Room Only (Không ăn sáng)</option>
+                                                <option value="rate_bf">Breakfast Included (Bao gồm ăn sáng)</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-blue-50/50 p-4 border border-blue-100 rounded-xl gap-4">
+                        <div class="text-sm text-blue-800">
+                            <span class="font-semibold">Lưu ý:</span> Những phòng không được ghép nối sẽ không được cập nhật giá và phòng trống lên OTA.
+                        </div>
+                        <button class="flex items-center justify-center gap-2 px-6 py-2 bg-[#1BA0E2] text-white rounded-lg font-medium hover:bg-[#1588c2] transition-colors whitespace-nowrap w-full sm:w-auto" onclick="alert('Đã lưu dữ liệu ghép nối thành công!')">
+                            <i data-lucide="save" class="w-4.5 h-4.5"></i> Lưu Mapping
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB: NHẬT KÝ -->
+                <div id="logs" class="tab-content hidden space-y-4 animate-fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Lịch sử đồng bộ gần đây</h3>
+                        <button class="text-sm text-[#1BA0E2] hover:underline flex items-center gap-1">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Tải lại bảng
+                        </button>
+                    </div>
+
+                    <div class="border rounded-lg overflow-x-auto text-sm">
+                        <table class="w-full text-left min-w-[600px]">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr>
+                                    <th class="p-3 font-medium">Thời gian</th>
+                                    <th class="p-3 font-medium">Hành động</th>
+                                    <th class="p-3 font-medium">Chi tiết</th>
+                                    <th class="p-3 font-medium">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr>
+                                    <td class="p-3 text-slate-600 whitespace-nowrap">14:32:01 - 18/03/2026</td>
+                                    <td class="p-3"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">PULL BOOKING</span></td>
+                                    <td class="p-3">Kéo đặt phòng mới mã #TVLK-99812</td>
+                                    <td class="p-3"><span class="text-emerald-600 font-medium flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Thành công</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-slate-600 whitespace-nowrap">14:30:15 - 18/03/2026</td>
+                                    <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">PUSH ARI</span></td>
+                                    <td class="p-3">Cập nhật giá phòng Deluxe (18/03 - 25/03)</td>
+                                    <td class="p-3"><span class="text-emerald-600 font-medium flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Thành công</span></td>
+                                </tr>
+                                <tr class="bg-red-50/50">
+                                    <td class="p-3 text-slate-600 whitespace-nowrap">14:15:00 - 18/03/2026</td>
+                                    <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">PUSH ARI</span></td>
+                                    <td class="p-3 text-red-600">Cập nhật phòng Standard <br/><span class="text-xs text-red-500">Lỗi: Hạn mức phòng (Allotment) trên hệ thống thấp hơn đã bán.</span></td>
+                                    <td class="p-3"><span class="text-red-600 font-medium flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Thất bại</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-slate-600 whitespace-nowrap">12:00:00 - 18/03/2026</td>
+                                    <td class="p-3"><span class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs font-medium">SYSTEM</span></td>
+                                    <td class="p-3">Xác thực Token mới</td>
+                                    <td class="p-3"><span class="text-emerald-600 font-medium flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Thành công</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // --- Logic Tab Switching ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            // Show selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+
+            // Reset tab button styles
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-b-2', 'border-[#1BA0E2]', 'text-[#1BA0E2]');
+                el.classList.add('text-slate-500');
+            });
+
+            // Activate current tab button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-slate-500');
+            activeBtn.classList.add('border-b-2', 'border-[#1BA0E2]', 'text-[#1BA0E2]');
+        }
+
+        // --- Logic Test Connection ---
+        function testConnection() {
+            const propertyId = document.getElementById('propertyId').value.trim();
+            if (!propertyId) {
+                alert('Vui lòng nhập Traveloka Property ID');
+                return;
+            }
+
+            const btn = document.getElementById('btnTestConn');
+            const icon = document.getElementById('testConnIcon');
+            const text = document.getElementById('testConnText');
+            const badge = document.getElementById('statusBadge');
+            const successMsg = document.getElementById('successMsg');
+
+            // Loading state
+            btn.disabled = true;
+            text.innerText = 'Đang kiểm tra...';
+            icon.setAttribute('data-lucide', 'refresh-cw');
+            icon.classList.add('animate-spin');
+            
+            badge.className = 'px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 bg-amber-100 text-amber-700 transition-colors';
+            badge.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i> Đang kiểm tra...`;
+            successMsg.classList.add('hidden');
+            
+            lucide.createIcons();
+
+            // Simulate API Call
+            setTimeout(() => {
+                btn.disabled = false;
+                text.innerText = 'Kiểm tra kết nối';
+                icon.setAttribute('data-lucide', 'link');
+                icon.classList.remove('animate-spin');
+
+                badge.className = 'px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 bg-emerald-100 text-emerald-700 transition-colors';
+                badge.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Đang kết nối`;
+                
+                successMsg.classList.remove('hidden');
+                
+                lucide.createIcons();
+            }, 1500);
+        }
+
+        // --- Logic Toggles Settings ---
+        function toggleSync(element) {
+            const track = element.querySelector('.toggle-track');
+            const circle = element.querySelector('.toggle-circle');
+
+            if (track.classList.contains('bg-emerald-500')) {
+                track.classList.replace('bg-emerald-500', 'bg-slate-300');
+                circle.classList.replace('translate-x-6', 'translate-x-0');
+            } else {
+                track.classList.replace('bg-slate-300', 'bg-emerald-500');
+                circle.classList.replace('translate-x-0', 'translate-x-6');
+            }
+        }
+
+        // --- Logic Save Settings ---
+        function saveSettings() {
+            const btn = document.getElementById('btnSaveSettings');
+            const icon = document.getElementById('saveSettingsIcon');
+            const text = document.getElementById('saveSettingsText');
+
+            // Loading state
+            btn.disabled = true;
+            btn.classList.replace('bg-slate-900', 'bg-slate-700');
+            text.innerText = 'Đang lưu...';
+            icon.setAttribute('data-lucide', 'refresh-cw');
+            icon.classList.add('animate-spin');
+            lucide.createIcons();
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.replace('bg-slate-700', 'bg-slate-900');
+                text.innerText = 'Lưu cài đặt';
+                icon.setAttribute('data-lucide', 'save');
+                icon.classList.remove('animate-spin');
+                lucide.createIcons();
+                
+                alert('Đã lưu cấu hình đồng bộ thành công!');
+            }, 800);
+        }
+
+        // --- Logic Update Mapping Row Colors ---
+        function updateRowStatus(selectEl) {
+            const row = selectEl.closest('tr');
+            const selects = row.querySelectorAll('select');
+            const linkIcon = row.querySelector('td i[data-lucide="link"]');
+            
+            let isComplete = true;
+            selects.forEach(sel => {
+                if (sel.value === '') {
+                    isComplete = false;
+                    sel.className = 'w-full text-sm border border-amber-300 bg-amber-50 text-amber-700 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors';
+                } else {
+                    sel.className = 'w-full text-sm border border-slate-300 bg-white text-slate-900 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-[#1BA0E2] transition-colors';
+                }
+            });
+
+            if (isComplete) {
+                linkIcon.className = 'w-4 h-4 text-[#1BA0E2] inline-block';
+            } else {
+                linkIcon.className = 'w-4 h-4 text-slate-300 inline-block';
+            }
+        }
+    </script>
+</body>
+</html>
