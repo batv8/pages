@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind CSS Mastery: Phương pháp ghi nhớ</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Tailwind Config for Custom Colors (Palette matching) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa', // teal-50
+                            100: '#ccfbf1', // teal-100
+                            500: '#14b8a6', // teal-500
+                            700: '#0f766e', // teal-700
+                            900: '#134e4a', // teal-900
+                        },
+                        neutral: {
+                            50: '#fafaf9', // stone-50
+                            800: '#292524', // stone-800
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Chart Container Styling - STRICT REQUIREMENTS */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        
+        /* Custom scrollbar for better UI */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cdd5df; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9aa4b2; 
+        }
+
+        /* Flashcard flip animation classes */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="bg-neutral-50 text-neutral-800 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Chosen Palette: Warm Neutrals (Stone) for background, Vibrant Teal (Brand) for accents/interactive elements. -->
+    
+    <!-- Application Structure Plan: 
+         1. Header: Title and overall objective.
+         2. Mental Model Section (Theory): Explains the Naming Convention and Scale (core to memorizing Tailwind).
+         3. Interactive Dictionary (Reference): Categorized tabs (Spacing, Layout, etc.) showing CSS -> Tailwind mappings.
+         4. Interactive Flashcard & Progress Dashboard (Practice & Visualization): A module where users test their knowledge. As they memorize cards, a Chart.js Radar Chart dynamically updates their "Proficiency", providing a feedback loop and satisfying the data visualization requirement in an interactive way.
+         Rationale: This structure moves the user from Passive Learning (Theory/Reference) to Active Learning (Flashcards/Progress Tracking), which is the most effective way to memorize.
+    -->
+    
+    <!-- Visualization & Content Choices:
+         - Mental Model blocks: HTML/CSS flexbox layouts with distinctive background colors to visually parse the syntax (e.g., text-center). Goal: Inform.
+         - Category Tabs: JS-driven HTML tabs to organize the vast amount of classes without overwhelming the user. Goal: Organize.
+         - Flashcards: CSS 3D transform animations on HTML elements (triggered by JS) to simulate physical flashcards. Goal: Engagement/Testing.
+         - Radar Chart (Chart.js): Visualizes the user's learning progress across 5 dimensions (Layout, Spacing, Typography, Colors, Borders). Updates dynamically. Goal: Inform/Motivate. 
+         - Library: Chart.js (Canvas). HTML/Tailwind for UI.
+    -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. HTML symbols and Tailwind styling used for all icons/visuals. -->
+
+    <!-- Navigation / Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-brand-500 text-2xl font-bold font-mono">{ }</span>
+                <h1 class="text-xl font-bold text-neutral-800 tracking-tight">Tailwind<span class="text-brand-500">Mastery</span></h1>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium text-gray-600">
+                <a href="#mental-model" class="hover:text-brand-500 transition-colors">Tư duy (Mental Model)</a>
+                <a href="#dictionary" class="hover:text-brand-500 transition-colors">Từ điển (Dictionary)</a>
+                <a href="#practice" class="hover:text-brand-500 transition-colors">Thực hành (Practice)</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+        
+        <!-- Hero Section -->
+        <section class="text-center max-w-3xl mx-auto space-y-4">
+            <h2 class="text-4xl font-extrabold text-neutral-800 tracking-tight">Ghi nhớ Tailwind CSS qua <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-teal-400">Tư Duy Hệ Thống</span></h2>
+            <p class="text-lg text-gray-600">
+                Đừng cố gắng học thuộc lòng hàng ngàn classes. Phần mềm này giúp bạn nắm bắt <strong>Mental Model</strong> (Mô hình tư duy) cốt lõi của Tailwind, kết hợp thực hành tương tác (Interactive Practice) để tự động dịch <em>Standard CSS</em> sang <em>Tailwind Classes</em> trong đầu bạn.
+            </p>
+        </section>
+
+        <!-- Section 1: Mental Model -->
+        <section id="mental-model" class="scroll-mt-20">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">1. Naming Convention (Quy tắc đặt tên)</h3>
+                <p class="text-gray-600 mb-6">
+                    Mọi class trong Tailwind đều tuân theo một công thức logic. Hiểu công thức này, bạn có thể tự suy luận ra 80% các class. Cấu trúc cơ bản thường là: <code class="bg-gray-100 text-brand-700 px-2 py-1 rounded">[prefix]-[value]</code> hoặc <code class="bg-gray-100 text-brand-700 px-2 py-1 rounded">[property]-[scale]</code>.
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Anatomy Block 1 -->
+                    <div class="bg-neutral-50 border border-gray-200 rounded-xl p-6">
+                        <h4 class="font-semibold text-gray-800 mb-4 border-b pb-2">Ví dụ: Spacing (Khoảng cách)</h4>
+                        <div class="flex items-center justify-center space-x-2 text-2xl font-mono mb-4">
+                            <span class="bg-brand-100 text-brand-700 px-3 py-1 rounded-lg border border-brand-200" title="Property: padding">p</span>
+                            <span class="text-gray-400">-</span>
+                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg border border-orange-200" title="Direction: top/bottom">y</span>
+                            <span class="text-gray-400">-</span>
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg border border-blue-200" title="Scale: 4 = 1rem">4</span>
+                        </div>
+                        <ul class="text-sm text-gray-600 space-y-2">
+                            <li><span class="font-mono text-brand-700 font-bold">p</span> = <strong>padding</strong> (hoặc <span class="font-mono text-brand-700">m</span> = <strong>margin</strong>)</li>
+                            <li><span class="font-mono text-orange-700 font-bold">y</span> = y-axis (Top & Bottom). Tương tự: <span class="font-mono">x</span> (Left/Right), <span class="font-mono">t</span> (Top), <span class="font-mono">b</span> (Bottom), <span class="font-mono">l</span> (Left), <span class="font-mono">r</span> (Right).</li>
+                            <li><span class="font-mono text-blue-700 font-bold">4</span> = Scale (Thang đo). Mặc định 1 đơn vị = 0.25rem (4px). Vậy 4 = 1rem (16px).</li>
+                        </ul>
+                    </div>
+
+                    <!-- Anatomy Block 2 -->
+                    <div class="bg-neutral-50 border border-gray-200 rounded-xl p-6">
+                        <h4 class="font-semibold text-gray-800 mb-4 border-b pb-2">Ví dụ: Typography (Chữ)</h4>
+                        <div class="flex items-center justify-center space-x-2 text-2xl font-mono mb-4">
+                            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg border border-purple-200" title="Property group">text</span>
+                            <span class="text-gray-400">-</span>
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg border border-green-200" title="Alignment/Size/Color">center</span>
+                        </div>
+                        <ul class="text-sm text-gray-600 space-y-2">
+                            <li>Bắt đầu với <span class="font-mono text-purple-700 font-bold">text-</span> cho các thuộc tính liên quan đến chữ.</li>
+                            <li><span class="font-mono text-green-700 font-bold">center</span> = <strong>text-align: center;</strong></li>
+                            <li>Kích thước: <span class="font-mono">text-lg</span>, <span class="font-mono">text-xl</span> (Tương tự size quần áo: sm, md, lg, xl).</li>
+                            <li>Màu sắc: <span class="font-mono">text-red-500</span> (Property + Color + Shade).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Interactive Dictionary -->
+        <section id="dictionary" class="scroll-mt-20">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">2. CSS to Tailwind Dictionary</h3>
+                <p class="text-gray-600 mt-2">Bảng tra cứu nhanh các mapping phổ biến. Hãy chọn từng nhóm (Category) để xem cách chuyển đổi từ <strong>Standard CSS</strong> sang <strong>Tailwind</strong>.</p>
+            </div>
+
+            <!-- Tabs Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- Tab Headers -->
+                <div class="flex border-b border-gray-200 overflow-x-auto" id="tab-headers">
+                    <button class="tab-btn active px-6 py-4 text-sm font-medium text-brand-600 border-b-2 border-brand-500 whitespace-nowrap focus:outline-none" data-target="tab-layout">Layout & Flex/Grid</button>
+                    <button class="tab-btn px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent whitespace-nowrap focus:outline-none" data-target="tab-spacing">Spacing & Sizing</button>
+                    <button class="tab-btn px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent whitespace-nowrap focus:outline-none" data-target="tab-typo">Typography</button>
+                    <button class="tab-btn px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent whitespace-nowrap focus:outline-none" data-target="tab-borders">Borders & Effects</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div class="p-6 bg-gray-50/50">
+                    <!-- Tab: Layout -->
+                    <div id="tab-layout" class="tab-content block">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">display: flex;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">flex</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">flex-direction: column;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">flex-col</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">justify-content: space-between;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">justify-between</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">align-items: center;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">items-center</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded text-right">grid grid-cols-3</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">gap: 1rem;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">gap-4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Spacing -->
+                    <div id="tab-spacing" class="tab-content hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">margin: 1rem;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">m-4</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">padding-left: 2rem; padding-right: 2rem;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">px-8</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">width: 100%;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">w-full</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">height: 100vh;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">h-screen</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">max-width: 1024px;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">max-w-screen-lg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Typography -->
+                    <div id="tab-typo" class="tab-content hidden">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">font-size: 1.5rem; line-height: 2rem;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">text-2xl</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">font-weight: 700;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">font-bold</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">text-align: right;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">text-right</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">color: #ffffff;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">text-white</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Borders -->
+                    <div id="tab-borders" class="tab-content hidden">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">border-radius: 0.5rem;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">rounded-lg</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">border-width: 1px;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">border</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">border-color: #e5e7eb;</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">border-gray-200</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                                <code class="text-sm text-gray-600">box-shadow: ...</code>
+                                <span class="font-mono text-brand-700 font-bold bg-brand-50 px-2 py-1 rounded">shadow-md</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Interactive Practice & Visualization -->
+        <section id="practice" class="scroll-mt-20">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">3. Thực hành & Theo dõi tiến độ (Interactive Practice)</h3>
+                <p class="text-gray-600 mt-2">Đọc là chưa đủ. Hãy làm bài test lật thẻ (Flashcards) dưới đây. Biểu đồ Radar bên phải sẽ cập nhật trực tiếp <strong>Mức độ thành thạo (Proficiency)</strong> của bạn theo từng nhóm kỹ năng dựa trên kết quả bạn trả lời.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 items-start">
+                
+                <!-- Flashcard Module -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Flashcard <span id="card-counter">1/10</span></span>
+                        <span id="current-category-badge" class="px-2 py-1 bg-brand-50 text-brand-700 text-xs font-bold rounded">Layout</span>
+                    </div>
+
+                    <!-- The Card Container (3D Flip logic) -->
+                    <div class="relative flex-1 perspective-1000 w-full cursor-pointer group" id="flashcard-container" onclick="flipCard()">
+                        <div id="flashcard-inner" class="w-full h-full absolute transform-style-3d transition-transform duration-500 ease-in-out">
+                            <!-- Front (Standard CSS) -->
+                            <div class="absolute w-full h-full bg-slate-800 text-white rounded-xl backface-hidden flex flex-col items-center justify-center p-6 border-2 border-slate-700 shadow-inner">
+                                <span class="text-slate-400 text-sm mb-2 uppercase tracking-widest">Standard CSS</span>
+                                <code id="card-front-text" class="text-xl md:text-2xl text-center font-mono text-green-400 font-medium">display: flex;</code>
+                                <span class="absolute bottom-4 text-xs text-slate-400 opacity-70">Nhấp để lật (Click to flip) &rarr;</span>
+                            </div>
+                            
+                            <!-- Back (Tailwind Class) -->
+                            <div class="absolute w-full h-full bg-brand-50 rounded-xl backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 border-2 border-brand-200">
+                                <span class="text-brand-600 text-sm mb-2 uppercase tracking-widest">Tailwind Class</span>
+                                <code id="card-back-text" class="text-3xl md:text-4xl text-center font-mono font-bold text-brand-700">flex</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-6 flex gap-4 opacity-50 pointer-events-none transition-opacity duration-300" id="card-actions">
+                        <button onclick="handleCardAnswer(false)" class="flex-1 py-3 px-4 bg-white border-2 border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                            &#10008; Chưa nhớ (Review)
+                        </button>
+                        <button onclick="handleCardAnswer(true)" class="flex-1 py-3 px-4 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+                            &#10004; Đã nhớ (Got it)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Visualization Module (Chart.js) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-[400px] flex flex-col">
+                    <h4 class="font-bold text-gray-800 text-center mb-2">Hồ sơ năng lực Tailwind (Proficiency Radar)</h4>
+                    <p class="text-xs text-gray-500 text-center mb-4">Hoàn thành flashcard để tăng điểm kỹ năng. Biểu đồ tự động cập nhật.</p>
+                    
+                    <div class="chart-container flex-1">
+                        <canvas id="proficiencyChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center text-sm text-gray-500">
+            &copy; 2026 TailwindMastery SPA. Designed for interactive learning without external assets.
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. Tab Navigation Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active from all buttons
+                    tabBtns.forEach(b => {
+                        b.classList.remove('text-brand-600', 'border-brand-500');
+                        b.classList.add('text-gray-500', 'border-transparent');
+                    });
+                    
+                    // Add active to clicked button
+                    btn.classList.remove('text-gray-500', 'border-transparent');
+                    btn.classList.add('text-brand-600', 'border-brand-500');
+
+                    // Hide all content
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                        content.classList.remove('block');
+                    });
+
+                    // Show target content
+                    const targetId = btn.getAttribute('data-target');
+                    const targetContent = document.getElementById(targetId);
+                    targetContent.classList.remove('hidden');
+                    targetContent.classList.add('block');
+                });
+            });
+        });
+
+        // --- 2. Flashcard & State Management Data ---
+        // Array of questions mapping CSS to Tailwind, grouped by Category
+        const cardData = [
+            { category: "Layout", css: "display: flex;", tw: "flex" },
+            { category: "Layout", css: "justify-content: center;", tw: "justify-center" },
+            { category: "Layout", css: "position: absolute;", tw: "absolute" },
+            { category: "Spacing", css: "margin-top: 2rem;", tw: "mt-8" }, // 8 * 0.25 = 2rem
+            { category: "Spacing", css: "padding: 1rem;", tw: "p-4" },
+            { category: "Spacing", css: "width: 100%;", tw: "w-full" },
+            { category: "Typography", css: "font-weight: 700;", tw: "font-bold" },
+            { category: "Typography", css: "text-align: right;", tw: "text-right" },
+            { category: "Borders", css: "border-radius: 9999px;", tw: "rounded-full" },
+            { category: "Colors", css: "background-color: transparent;", tw: "bg-transparent" },
+            { category: "Layout", css: "display: none;", tw: "hidden" },
+            { category: "Spacing", css: "height: 100vh;", tw: "h-screen" }
+        ];
+
+        // Shuffle function for random practice
+        function shuffle(array) {
+            let currentIndex = array.length,  randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        let deck = shuffle([...cardData]);
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        // User proficiency state (Scores range from 1 to 10 max)
+        const proficiencyState = {
+            "Layout": 2,
+            "Spacing": 2,
+            "Typography": 2,
+            "Colors": 2,
+            "Borders": 2
+        };
+
+        // UI Elements
+        const elFrontText = document.getElementById('card-front-text');
+        const elBackText = document.getElementById('card-back-text');
+        const elBadge = document.getElementById('current-category-badge');
+        const elCounter = document.getElementById('card-counter');
+        const elInnerCard = document.getElementById('flashcard-inner');
+        const elActions = document.getElementById('card-actions');
+
+        // Initialize first card
+        function loadCard() {
+            if (currentCardIndex >= deck.length) {
+                // Reshuffle if deck empty
+                deck = shuffle([...cardData]);
+                currentCardIndex = 0;
+                alert("Bạn đã ôn tập xong một lượt. Hệ thống sẽ trộn lại thẻ!");
+            }
+
+            const card = deck[currentCardIndex];
+            elFrontText.innerText = card.css;
+            elBackText.innerText = card.tw;
+            elBadge.innerText = card.category;
+            elCounter.innerText = `${currentCardIndex + 1}/${deck.length}`;
+            
+            // Reset state
+            isFlipped = false;
+            elInnerCard.classList.remove('rotate-y-180');
+            elActions.classList.add('opacity-50', 'pointer-events-none');
+            elActions.classList.remove('opacity-100');
+        }
+
+        function flipCard() {
+            if (!isFlipped) {
+                elInnerCard.classList.add('rotate-y-180');
+                isFlipped = true;
+                // Enable action buttons
+                elActions.classList.remove('opacity-50', 'pointer-events-none');
+                elActions.classList.add('opacity-100');
+            }
+        }
+
+        // --- 3. Chart.js Initialization & Update Logic ---
+        let radarChart;
+
+        function initChart() {
+            const ctx = document.getElementById('proficiencyChart').getContext('2d');
+            
+            const data = {
+                labels: ['Layout', 'Spacing', 'Typography', 'Colors', 'Borders'],
+                datasets: [{
+                    label: 'Điểm kỹ năng',
+                    data: [proficiencyState["Layout"], proficiencyState["Spacing"], proficiencyState["Typography"], proficiencyState["Colors"], proficiencyState["Borders"]],
+                    backgroundColor: 'rgba(20, 184, 166, 0.2)', // brand-500 with opacity
+                    borderColor: 'rgba(20, 184, 166, 1)',
+                    pointBackgroundColor: 'rgba(20, 184, 166, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(20, 184, 166, 1)',
+                    borderWidth: 2,
+                }]
+            };
+
+            const config = {
+                type: 'radar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CRUCIAL for chart-container sizing
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: {
+                                font: { size: 12, family: "'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif", weight: 'bold' },
+                                color: '#4b5563'
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                min: 0,
+                                max: 10,
+                                stepSize: 2,
+                                display: false // Hide numbers on scale for cleaner look
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                            padding: 10,
+                            bodyFont: { font: {family: "'Inter', sans-serif"} }
+                        }
+                    }
+                },
+            };
+
+            radarChart = new Chart(ctx, config);
+        }
+
+        function updateChart() {
+            if (radarChart) {
+                radarChart.data.datasets[0].data = [
+                    proficiencyState["Layout"], 
+                    proficiencyState["Spacing"], 
+                    proficiencyState["Typography"], 
+                    proficiencyState["Colors"], 
+                    proficiencyState["Borders"]
+                ];
+                radarChart.update();
+            }
+        }
+
+        // Handle button clicks after flipping
+        function handleCardAnswer(remembered) {
+            const currentCategory = deck[currentCardIndex].category;
+
+            if (remembered) {
+                // Increase score for category (max 10)
+                if (proficiencyState[currentCategory] < 10) {
+                    // Small increments to make the chart progress visible over time
+                    proficiencyState[currentCategory] = Math.min(10, proficiencyState[currentCategory] + 1.5); 
+                }
+            } else {
+                // If forgotten, slight decrease (min 0) to simulate spaced repetition need
+                proficiencyState[currentCategory] = Math.max(0, proficiencyState[currentCategory] - 0.5);
+            }
+
+            // Update Chart Data visually
+            updateChart();
+
+            // Move to next card
+            currentCardIndex++;
+            loadCard();
+        }
+
+        // Initialize application on load
+        window.onload = () => {
+            loadCard();
+            initChart();
+        };
+
+    </script>
+</body>
+</html>
