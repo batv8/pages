@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GetARIV2 - Semantic Analyzer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tùy chỉnh thanh cuộn */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col font-sans overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white p-4 shadow-md flex justify-between items-center z-10 shrink-0">
+        <div>
+            <h1 class="text-xl font-bold">Phân tích Ngữ nghĩa GetARIV2 (OTA_HotelAvailRS)</h1>
+            <p class="text-sm text-indigo-200">Dịch từ raw XML sang Business Logic (Phòng, Gói giá, Chính sách)</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col lg:flex-row p-4 gap-4 min-h-0">
+        
+        <!-- Sidebar: Input XML -->
+        <aside class="w-full lg:w-1/3 flex flex-col bg-white rounded-lg shadow-sm border border-slate-200 p-4 min-h-0 shrink-0">
+            <label for="xmlInput" class="font-semibold text-slate-700 mb-2 flex justify-between items-end">
+                <span>Nhập XML Response:</span>
+            </label>
+            <textarea id="xmlInput" 
+                      class="flex-1 w-full p-3 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs resize-none mb-4 bg-slate-50 text-slate-800" 
+                      placeholder="Dán mã XML từ Agoda GetARIV2 vào đây..."></textarea>
+            
+            <div class="flex gap-2">
+                <button id="analyzeBtn" 
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition-colors shadow-sm">
+                    Phân Tích Ngữ Nghĩa
+                </button>
+                <button id="sampleBtn" 
+                        class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold py-2 px-4 rounded transition-colors shadow-sm text-sm">
+                    Load XML Mẫu
+                </button>
+            </div>
+            <div id="statusMessage" class="mt-3 text-sm hidden font-medium"></div>
+        </aside>
+
+        <!-- Main Area: Semantic Results -->
+        <section class="w-full lg:w-2/3 flex flex-col bg-white rounded-lg shadow-sm border border-slate-200 p-0 min-h-0 overflow-hidden">
+            <div class="bg-slate-100 border-b border-slate-200 p-3 px-5 flex justify-between items-center shrink-0">
+                <h2 class="font-bold text-slate-800">Kết quả "Dịch" dữ liệu (Business Logic)</h2>
+                <span id="resultCount" class="text-sm bg-indigo-100 text-indigo-800 px-2 py-1 rounded font-semibold">0 kết quả</span>
+            </div>
+            
+            <div id="resultsContainer" class="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-6">
+                <!-- Empty State -->
+                <div class="h-full flex flex-col items-center justify-center text-slate-400">
+                    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <p>Nhập XML và bấm "Phân Tích" để xem ý nghĩa dữ liệu</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Cấu trúc Data Model để chứa ngữ nghĩa (Cập nhật theo chuẩn Agoda YCS GetARIV2)
+        class RatePlanSemantic {
+            constructor() {
+                this.propertyId = "N/A";
+                this.roomId = "N/A";
+                this.ratePlanId = "N/A";
+                this.currency = "";
+                this.dates = []; // Array of { date, available, rate, closed, cta, ctd, min_los, max_los, occupancies }
+            }
+        }
+
+        // --- Hàm Helper Parse XML ---
+        function getElementsByTagRobust(parent, tagName) {
+            let els = parent.getElementsByTagName(tagName);
+            if (els.length === 0) {
+                // Hỗ trợ đọc thẻ bỏ qua XML Namespaces (ví dụ: xmlns="...")
+                els = parent.getElementsByTagNameNS("*", tagName);
+            }
+            return els;
+        }
+
+        function getFirstElementByTagRobust(parent, tagName) {
+            const els = getElementsByTagRobust(parent, tagName);
+            return els.length > 0 ? els[0] : null;
+        }
+
+        function getTextByTag(node, tagName) {
+            const child = getFirstElementByTagRobust(node, tagName);
+            return child ? child.textContent.trim() : "";
+        }
+
+        function getAttrByTag(node, tagName, attrName) {
+            const child = getFirstElementByTagRobust(node, tagName);
+            return child && child.hasAttribute(attrName) ? child.getAttribute(attrName) : "";
+        }
+
+        // --- Logic Phân tích (Cập nhật theo chuẩn Agoda YCS GetARIV2) ---
+        function analyzeXML(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+            if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                throw new Error("XML không hợp lệ (Sai cú pháp).");
+            }
+
+            // Agoda GetARIV2 trả về <result> chứa <property>
+            const properties = getElementsByTagRobust(xmlDoc, "property");
+            if (properties.length === 0) {
+                throw new Error("Không tìm thấy thẻ <property>. Đảm bảo đây là response YCS GetARIV2 của Agoda.");
+            }
+
+            const parsedResults = [];
+
+            // Kiểm tra format: Định dạng mới (nhóm theo Date) vs Định dạng cũ (nhóm theo RatePlan)
+            const isDateGroupedFormat = properties[0].hasAttribute("date");
+
+            if (isDateGroupedFormat) {
+                // --- FORMAT MỚI: <property date="..."> -> <rates> & <inventories> ---
+                const ratePlansMap = new Map();
+
+                Array.from(properties).forEach(prop => {
+                    const propId = prop.getAttribute("id");
+                    const date = prop.getAttribute("date");
+
+                    // 1. Phân tích Inventories (Số lượng phòng trống / Trạng thái đóng mở)
+                    const inventoryMap = new Map();
+                    const inventoriesNode = getFirstElementByTagRobust(prop, "inventories");
+                    if (inventoriesNode) {
+                        const invRooms = getElementsByTagRobust(inventoriesNode, "room");
+                        Array.from(invRooms).forEach(invRoom => {
+                            const roomId = invRoom.getAttribute("room_id");
+                            inventoryMap.set(roomId, {
+                                allotment: invRoom.getAttribute("allotment") || "0",
+                                closed: invRoom.getAttribute("closed") || "false",
+                                cta: invRoom.getAttribute("cta") || "false",
+                                ctd: invRoom.getAttribute("ctd") || "false"
+                            });
+                        });
+                    }
+
+                    // 2. Phân tích Rates (Giá tiền / Các giới hạn)
+                    const ratesNodes = getElementsByTagRobust(prop, "rates");
+                    Array.from(ratesNodes).forEach(rateNode => {
+                        const ratePlanId = rateNode.getAttribute("rateplan_id") || "N/A";
+                        const currency = rateNode.getAttribute("currency") || "";
+
+                        const rateRooms = getElementsByTagRobust(rateNode, "room");
+                        Array.from(rateRooms).forEach(rateRoom => {
+                            const roomId = rateRoom.getAttribute("room_id");
+                            
+                            const key = `${propId}_${roomId}_${ratePlanId}`;
+                            if (!ratePlansMap.has(key)) {
+                                const semantic = new RatePlanSemantic();
+                                semantic.propertyId = propId;
+                                semantic.roomId = roomId;
+                                semantic.ratePlanId = ratePlanId;
+                                semantic.currency = currency;
+                                ratePlansMap.set(key, semantic);
+                            }
+
+                            const semantic = ratePlansMap.get(key);
+                            const inv = inventoryMap.get(roomId) || {};
+
+                            const pricesNode = getFirstElementByTagRobust(rateRoom, "prices");
+                            const occupancies = [];
+                            let defaultRate = "N/A";
+                            if (pricesNode) {
+                                const occNodes = getElementsByTagRobust(pricesNode, "occupancy");
+                                Array.from(occNodes).forEach(occ => {
+                                    const person = occ.getAttribute("person");
+                                    const price = occ.getAttribute("price");
+                                    occupancies.push({ pax: person, rate: price });
+                                    defaultRate = price; // Dùng giá của người cuối cùng làm mặc định hiển thị
+                                });
+                            }
+
+                            const dateObj = {
+                                date: date,
+                                available: inv.allotment || "0",
+                                rate: defaultRate,
+                                closed: rateRoom.getAttribute("closed") === "true" || inv.closed === "true" ? "true" : "false",
+                                cta: rateRoom.getAttribute("cta") === "true" || inv.cta === "true" ? "true" : "false",
+                                ctd: rateRoom.getAttribute("ctd") === "true" || inv.ctd === "true" ? "true" : "false",
+                                min_los: rateRoom.getAttribute("min_los") || "0",
+                                max_los: rateRoom.getAttribute("max_los") || "0",
+                                occupancies: occupancies
+                            };
+
+                            semantic.dates.push(dateObj);
+                        });
+                    });
+                });
+
+                // Convert map values to array and sort dates
+                parsedResults.push(...Array.from(ratePlansMap.values()));
+                parsedResults.forEach(res => res.dates.sort((a, b) => new Date(a.date) - new Date(b.date)));
+
+            } else {
+                // --- FORMAT CŨ: <property> -> <room> -> <rateplan> -> <date_values> ---
+                Array.from(properties).forEach(prop => {
+                    const propId = prop.getAttribute("id") || "N/A";
+                    
+                    const rooms = getElementsByTagRobust(prop, "room");
+                    Array.from(rooms).forEach(room => {
+                        const roomId = room.getAttribute("id") || "N/A";
+                        
+                        const ratePlans = getElementsByTagRobust(room, "rateplan");
+                        Array.from(ratePlans).forEach(rp => {
+                            const semantic = new RatePlanSemantic();
+                            semantic.propertyId = propId;
+                            semantic.roomId = roomId;
+                            semantic.ratePlanId = rp.getAttribute("id") || "N/A";
+                            
+                            const dateValues = getElementsByTagRobust(rp, "date_values");
+                            Array.from(dateValues).forEach(dv => {
+                                const dateObj = {
+                                    date: dv.getAttribute("value") || "N/A",
+                                    available: getTextByTag(dv, "available"),
+                                    rate: getTextByTag(dv, "rate"),
+                                    closed: getTextByTag(dv, "closed"),
+                                    cta: getTextByTag(dv, "cta"),
+                                    ctd: getTextByTag(dv, "ctd"),
+                                    min_los: getTextByTag(dv, "min_los"),
+                                    max_los: getTextByTag(dv, "max_los"),
+                                    occupancies: []
+                                };
+                                
+                                // Parse multi-occupancy rates (GetARIV2 specific)
+                                const occNodes = getElementsByTagRobust(dv, "occupancy");
+                                Array.from(occNodes).forEach(occ => {
+                                    dateObj.occupancies.push({
+                                        pax: occ.getAttribute("pax") || "?",
+                                        rate: getTextByTag(occ, "rate")
+                                    });
+                                });
+                                
+                                semantic.dates.push(dateObj);
+                            });
+                            
+                            if (semantic.dates.length > 0) {
+                                parsedResults.push(semantic);
+                            }
+                        });
+                    });
+                });
+            }
+
+            return parsedResults;
+        }
+
+        // --- Hàm Render UI ---
+        function renderResults(results) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = ''; // Clear old results
+            
+            document.getElementById('resultCount').textContent = `${results.length} Gói Giá / Phòng`;
+
+            // Thêm khối giải thích chung ở đầu tiên (chỉ xuất hiện 1 lần)
+            if (results.length > 0) {
+                container.innerHTML = `
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 text-sm text-indigo-800 shadow-sm">
+                        <strong>💡 Ý nghĩa dữ liệu:</strong> Đây là dữ liệu trả về thực tế (ARI - Availability, Rates, Inventory) trên Extranet (YCS) của Agoda. Báo cáo tình trạng phòng, số lượng khả dụng (available), giá (rate) và các ràng buộc như ngừng bán (closed), cấm check-in (CTA) / check-out (CTD), hay lưu trú tối thiểu/tối đa (Min/Max LOS).
+                    </div>
+                `;
+            }
+
+            results.forEach((res, index) => {
+                // Tính toán sơ bộ tổng quan
+                const totalNights = res.dates.length;
+                let isFullyClosed = true;
+                
+                // Render Dates list
+                let datesHtml = res.dates.map(d => {
+                    if (d.closed !== "true" && d.closed !== "1") isFullyClosed = false;
+                    
+                    const statusBadge = (d.closed === "true" || d.closed === "1") 
+                        ? `<span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] rounded font-bold uppercase">Closed</span>`
+                        : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] rounded font-bold uppercase">Open (Còn ${d.available})</span>`;
+                        
+                    // Restrictions logic
+                    let restrictions = [];
+                    if (d.cta === "true" || d.cta === "1") restrictions.push("CTA");
+                    if (d.ctd === "true" || d.ctd === "1") restrictions.push("CTD");
+                    if (d.min_los && d.min_los !== "0") restrictions.push(`MinLOS:${d.min_los}`);
+                    if (d.max_los && d.max_los !== "0") restrictions.push(`MaxLOS:${d.max_los}`);
+                    
+                    const resHtml = restrictions.length > 0 
+                        ? `<div class="text-[10px] text-orange-600 font-mono bg-orange-50 px-1 rounded inline-block mt-1">${restrictions.join(' | ')}</div>` 
+                        : '';
+                        
+                    // Multi-occupancy logic
+                    let occHtml = '';
+                    if (d.occupancies.length > 0) {
+                        occHtml = `<div class="mt-1 flex flex-wrap gap-1">` + 
+                            d.occupancies.map(o => `<span class="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-1 rounded">Pax ${o.pax}: ${o.rate}</span>`).join('') +
+                            `</div>`;
+                    }
+
+                    return `
+                    <div class="flex flex-col py-2 border-b border-slate-100 last:border-0">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-mono text-xs font-bold text-indigo-900">${d.date}</span>
+                                <div class="mt-1">${statusBadge}</div>
+                                ${resHtml}
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-emerald-600 text-sm">${d.rate} ${res.currency || ''}</span>
+                                ${occHtml}
+                            </div>
+                        </div>
+                    </div>`
+                }).join('');
+
+                const cardHTML = `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                        <!-- Card Header -->
+                        <div class="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-indigo-900">Room ID: ${res.roomId}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="bg-slate-200 text-slate-800 text-xs font-semibold px-2 py-0.5 rounded">Property ID: ${res.propertyId}</span>
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">RatePlan ID: ${res.ratePlanId}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Trạng thái chung</div>
+                                ${isFullyClosed 
+                                    ? '<span class="text-red-600 font-bold text-sm">Đóng toàn bộ (Closed)</span>' 
+                                    : '<span class="text-emerald-600 font-bold text-sm">Đang mở bán</span>'
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Card Body (Nghiệp vụ chi tiết) -->
+                        <div class="p-4 grid grid-cols-1 gap-4">
+                            <!-- Breakdown Giá & Tồn kho -->
+                            <div class="bg-white rounded-lg border border-slate-100">
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 bg-slate-50 p-2 border-b border-slate-100 flex justify-between">
+                                    <span>Chi tiết hàng ngày (${totalNights} ngày)</span>
+                                    <span>Giá Default / Theo Pax</span>
+                                </h4>
+                                <div class="space-y-1 p-2 max-h-64 overflow-y-auto">
+                                    ${datesHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // --- Events ---
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const xmlString = document.getElementById('xmlInput').value.trim();
+            const statusEl = document.getElementById('statusMessage');
+            
+            if (!xmlString) {
+                statusEl.textContent = "Vui lòng nhập XML trước!";
+                statusEl.className = "mt-3 text-sm block font-medium text-red-600";
+                return;
+            }
+
+            try {
+                const results = analyzeXML(xmlString);
+                renderResults(results);
+                
+                statusEl.textContent = "Phân tích thành công!";
+                statusEl.className = "mt-3 text-sm block font-medium text-emerald-600";
+            } catch (error) {
+                console.error(error);
+                statusEl.textContent = error.message;
+                statusEl.className = "mt-3 text-sm block font-medium text-red-600";
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div class="p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
+                        <strong>Lỗi:</strong> Không thể phân tích cú pháp. Vui lòng đảm bảo XML là response hợp lệ từ YCS Agoda API.
+                    </div>`;
+            }
+        });
+
+        // Load Sample
+        document.getElementById('sampleBtn').addEventListener('click', () => {
+            const sampleXML = `<?xml version="1.0" encoding="UTF-8"?>
+<result timestamp="1774378312675">
+    <properties item_count="2">
+        <property id="5950803" date="2026-09-01">
+            <rates rateplan_id="2377446" currency="GBP">
+                <room room_id="119129325" closed="false" cta="false" ctd="false" min_los="5" max_los="0" min_staythrough="0">
+                    <prices>
+                        <occupancy person="1" price="110.00"/>
+                        <occupancy person="2" price="110.00"/>
+                    </prices>
+                </room>
+            </rates>
+            <inventories>
+                <room room_id="119129325" allotment="15" guaranteed_allotment="0" allotment_used_regular="0" allotment_used_guaranteed="0" closed="false" cta="false" ctd="false"/>
+            </inventories>
+        </property>
+        <property id="5950803" date="2026-09-02">
+            <rates rateplan_id="2377446" currency="GBP">
+                <room room_id="119129325" closed="false" cta="false" ctd="false" min_los="5" max_los="0" min_staythrough="0">
+                    <prices>
+                        <occupancy person="1" price="110.00"/>
+                        <occupancy person="2" price="110.00"/>
+                    </prices>
+                </room>
+            </rates>
+            <inventories>
+                <room room_id="119129325" allotment="15" guaranteed_allotment="0" allotment_used_regular="0" allotment_used_guaranteed="0" closed="false" cta="false" ctd="false"/>
+            </inventories>
+        </property>
+    </properties>
+</result>`;
+            document.getElementById('xmlInput').value = sampleXML;
+            // Tự động phân tích ngay sau khi nạp mẫu
+            document.getElementById('analyzeBtn').click();
+        });
+    </script>
+</body>
+</html>
