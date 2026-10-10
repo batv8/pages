@@ -1,3 +1,3 @@
 ### Rules
-- Never change file names.
-- Never delete files.
+- Never delete files
+- Never change file name
